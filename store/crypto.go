@@ -102,7 +102,7 @@ func (s *Store) GetGroupSessionsForRoom(roomID id.RoomID) ([]*crypto.InboundGrou
 	return s.s.GetGroupSessionsForRoom(roomID)
 }
 
-// GetGroupSessionsForRoom gets all the inbound Megolm sessions in the store. This is used for creating key export
+// GetAllGroupSessions gets all the inbound Megolm sessions in the store. This is used for creating key export
 // files. Unlike GetGroupSession, this should not return any errors about withheld keys.
 func (s *Store) GetAllGroupSessions() ([]*crypto.InboundGroupSession, error) {
 	s.log.Debug("loading all group sessions")

@@ -1,3 +1,4 @@
+// Package linkpearl represents the library itself
 package linkpearl
 
 import (

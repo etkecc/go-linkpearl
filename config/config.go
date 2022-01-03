@@ -1,3 +1,4 @@
+// Package config was added to store cross-package structs and interfaces.
 package config
 
 import (
