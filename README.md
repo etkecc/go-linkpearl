@@ -23,7 +23,6 @@ go lp.Start()
 
 ## TODO
 
-* Integrate with [Honoroit](https://gitlab.com/etke.cc/honoroit)
 * Unit tests
 
 ## Features
