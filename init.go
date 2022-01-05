@@ -16,6 +16,7 @@ func New(cfg *config.Config) (*Linkpearl, error) {
 	}
 	api.Logger = cfg.APILogger
 	lp := &Linkpearl{
+		db:  cfg.DB,
 		api: api,
 		log: cfg.LPLogger,
 	}

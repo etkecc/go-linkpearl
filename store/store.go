@@ -41,3 +41,8 @@ func (s *Store) WithCrypto(userID id.UserID, deviceID id.DeviceID, logger config
 
 	return s.s.CreateTables()
 }
+
+// GetDialect returns database dialect
+func (s *Store) GetDialect() string {
+	return s.dialect
+}
