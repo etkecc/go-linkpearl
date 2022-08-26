@@ -140,9 +140,14 @@ func (l *Linkpearl) SetPresence(presence event.Presence, message string) error {
 }
 
 // Start performs matrix /sync
-func (l *Linkpearl) Start() error {
+func (l *Linkpearl) Start(optionalStatusMsg ...string) error {
 	l.initSync()
-	err := l.api.SetPresence(event.PresenceOnline)
+	var statusMsg string
+	if len(optionalStatusMsg) > 0 {
+		statusMsg = optionalStatusMsg[0]
+	}
+
+	err := l.SetPresence(event.PresenceOnline, statusMsg)
 	if err != nil {
 		return err
 	}
