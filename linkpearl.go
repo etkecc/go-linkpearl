@@ -28,6 +28,11 @@ type Linkpearl struct {
 	maxretries int
 }
 
+type ReqPresence struct {
+	Presence  event.Presence `json:"presence"`
+	StatusMsg string         `json:"status_msg,omitempty"`
+}
+
 // New linkpearl
 func New(cfg *config.Config) (*Linkpearl, error) {
 	if cfg.MaxRetries == 0 {
@@ -123,6 +128,15 @@ func (l *Linkpearl) Send(roomID id.RoomID, content interface{}) (id.EventID, err
 		return "", err
 	}
 	return resp.EventID, err
+}
+
+// SetPresence (own). See https://spec.matrix.org/v1.3/client-server-api/#put_matrixclientv3presenceuseridstatus
+func (l *Linkpearl) SetPresence(presence event.Presence, message string) error {
+	req := ReqPresence{Presence: presence, StatusMsg: message}
+	u := l.GetClient().BuildClientURL("v3", "presence", l.GetClient().UserID, "status")
+	_, err := l.GetClient().MakeRequest("PUT", u, req, nil)
+
+	return err
 }
 
 // Start performs matrix /sync
