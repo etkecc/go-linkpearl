@@ -65,9 +65,10 @@ func (l *Linkpearl) onInvite(evt *event.Event) {
 
 	if l.joinPermit(evt) {
 		l.tryJoin(evt.RoomID, 0)
-	} else {
-		l.tryLeave(evt.RoomID, 0)
+		return
 	}
+
+	l.tryLeave(evt.RoomID, 0)
 }
 
 func (l *Linkpearl) tryJoin(roomID id.RoomID, retry int) {
@@ -108,11 +109,7 @@ func (l *Linkpearl) onEmpty(evt *event.Event) {
 		return
 	}
 
-	_, err := l.api.LeaveRoom(evt.RoomID)
-	if err != nil {
-		l.log.Error("cannot leave room: %v", err)
-	}
-	l.log.Debug("left room %s because it's empty", evt.RoomID)
+	l.tryLeave(evt.RoomID, 0)
 }
 
 func (l *Linkpearl) onEncryption(_ mautrix.EventSource, evt *event.Event) {
