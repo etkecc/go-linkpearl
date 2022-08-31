@@ -5,6 +5,7 @@ import (
 
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/event"
+	"maunium.net/go/mautrix/id"
 )
 
 // OnEventType allows callers to be notified when there are new events for the given event type.
@@ -48,25 +49,52 @@ func (l *Linkpearl) onMembership(_ mautrix.EventSource, evt *event.Event) {
 	}
 	l.store.SetMembership(evt)
 
-	// autoaccept invites
-	l.onInvite(evt, 0)
+	// potentially autoaccept invites
+	l.onInvite(evt)
+
 	// autoleave empty rooms
 	l.onEmpty(evt)
 }
 
-func (l *Linkpearl) onInvite(evt *event.Event, retry int) {
+func (l *Linkpearl) onInvite(evt *event.Event) {
 	userID := l.api.UserID.String()
 	invite := evt.Content.AsMember().Membership == event.MembershipInvite
-	if invite && evt.GetStateKey() == userID {
-		_, err := l.api.JoinRoomByID(evt.RoomID)
-		if err != nil {
-			l.log.Error("cannot join the room %s: %v", evt.RoomID, err)
-			if retry < l.maxretries {
-				time.Sleep(5 * time.Second)
-				l.log.Debug("trying to join again (%d/%d)", retry+1, l.maxretries)
-				l.onInvite(evt, retry+1)
-			}
-		}
+	if !invite || evt.GetStateKey() != userID {
+		return
+	}
+
+	if l.autoJoinApprover(evt) {
+		l.tryJoin(evt.RoomID, 0)
+	} else {
+		l.tryLeave(evt.RoomID, 0)
+	}
+}
+
+func (l *Linkpearl) tryJoin(roomID id.RoomID, retry int) {
+	if retry >= l.maxretries {
+		return
+	}
+
+	_, err := l.api.JoinRoomByID(roomID)
+	if err != nil {
+		l.log.Error("cannot join the room %s: %v", roomID, err)
+		time.Sleep(5 * time.Second)
+		l.log.Debug("trying to join again (%d/%d)", retry+1, l.maxretries)
+		l.tryJoin(roomID, retry+1)
+	}
+}
+
+func (l *Linkpearl) tryLeave(roomID id.RoomID, retry int) {
+	if retry >= l.maxretries {
+		return
+	}
+
+	_, err := l.api.LeaveRoom(roomID)
+	if err != nil {
+		l.log.Error("cannot leave room: %v", err)
+		time.Sleep(5 * time.Second)
+		l.log.Debug("trying to leave again (%d/%d)", retry+1, l.maxretries)
+		l.tryLeave(roomID, retry+1)
 	}
 }
 
