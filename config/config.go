@@ -18,8 +18,10 @@ type Config struct {
 	// Password for login/password auth only
 	Password string
 
-	// AutoJoinApprover is a callback function that tells if linkpearl should respond to the given "invite" event and automatically join the room
-	AutoJoinApprover func(*event.Event) bool
+	// JoinPermit is a callback function that tells
+	// if linkpearl should respond to the given "invite" event
+	// and join the room
+	JoinPermit func(*event.Event) bool
 
 	// AutoLeave if true, linkpearl will automatically leave empty rooms
 	AutoLeave bool

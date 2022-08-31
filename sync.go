@@ -63,7 +63,7 @@ func (l *Linkpearl) onInvite(evt *event.Event) {
 		return
 	}
 
-	if l.autoJoinApprover(evt) {
+	if l.joinPermit(evt) {
 		l.tryJoin(evt.RoomID, 0)
 	} else {
 		l.tryLeave(evt.RoomID, 0)

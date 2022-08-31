@@ -24,9 +24,9 @@ type Linkpearl struct {
 	olm   *crypto.OlmMachine
 	store *store.Store
 
-	autoJoinApprover func(*event.Event) bool
-	autoleave        bool
-	maxretries       int
+	joinPermit func(*event.Event) bool
+	autoleave  bool
+	maxretries int
 }
 
 type ReqPresence struct {
@@ -45,21 +45,19 @@ func New(cfg *config.Config) (*Linkpearl, error) {
 	}
 	api.Logger = cfg.APILogger
 
-	autoJoinApprover := cfg.AutoJoinApprover
-	if autoJoinApprover == nil {
+	joinPermit := cfg.JoinPermit
+	if joinPermit == nil {
 		// By default, we approve all join requests
-		autoJoinApprover = func(*event.Event) bool {
-			return true
-		}
+		joinPermit = func(*event.Event) bool { return true }
 	}
 
 	lp := &Linkpearl{
-		db:               cfg.DB,
-		api:              api,
-		log:              cfg.LPLogger,
-		autoJoinApprover: autoJoinApprover,
-		autoleave:        cfg.AutoLeave,
-		maxretries:       cfg.MaxRetries,
+		db:         cfg.DB,
+		api:        api,
+		log:        cfg.LPLogger,
+		joinPermit: joinPermit,
+		autoleave:  cfg.AutoLeave,
+		maxretries: cfg.MaxRetries,
 	}
 
 	storer := store.New(cfg.DB, cfg.Dialect, cfg.StoreLogger)
@@ -150,9 +148,9 @@ func (l *Linkpearl) SetPresence(presence event.Presence, message string) error {
 	return err
 }
 
-// SetAutoJoinApprover sets the the auto-join-approver callback function
-func (l *Linkpearl) SetAutoJoinApprover(value func(*event.Event) bool) {
-	l.autoJoinApprover = value
+// SetJoinPermit sets the the join permit callback function
+func (l *Linkpearl) SetJoinPermit(value func(*event.Event) bool) {
+	l.joinPermit = value
 }
 
 // Start performs matrix /sync
