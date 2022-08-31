@@ -24,6 +24,7 @@ type Linkpearl struct {
 	olm   *crypto.OlmMachine
 	store *store.Store
 
+	joinPermit func(*event.Event) bool
 	autoleave  bool
 	maxretries int
 }
@@ -43,10 +44,18 @@ func New(cfg *config.Config) (*Linkpearl, error) {
 		return nil, err
 	}
 	api.Logger = cfg.APILogger
+
+	joinPermit := cfg.JoinPermit
+	if joinPermit == nil {
+		// By default, we approve all join requests
+		joinPermit = func(*event.Event) bool { return true }
+	}
+
 	lp := &Linkpearl{
 		db:         cfg.DB,
 		api:        api,
 		log:        cfg.LPLogger,
+		joinPermit: joinPermit,
 		autoleave:  cfg.AutoLeave,
 		maxretries: cfg.MaxRetries,
 	}
@@ -137,6 +146,11 @@ func (l *Linkpearl) SetPresence(presence event.Presence, message string) error {
 	_, err := l.GetClient().MakeRequest("PUT", u, req, nil)
 
 	return err
+}
+
+// SetJoinPermit sets the the join permit callback function
+func (l *Linkpearl) SetJoinPermit(value func(*event.Event) bool) {
+	l.joinPermit = value
 }
 
 // Start performs matrix /sync
