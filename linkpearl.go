@@ -47,6 +47,10 @@ func setDefaults(cfg *config.Config) {
 	if cfg.AccountDataCache == 0 {
 		cfg.AccountDataCache = DefaultAccountDataCache
 	}
+	if cfg.JoinPermit == nil {
+		// By default, we approve all join requests
+		cfg.JoinPermit = func(*event.Event) bool { return true }
+	}
 }
 
 // New linkpearl
@@ -58,12 +62,6 @@ func New(cfg *config.Config) (*Linkpearl, error) {
 	}
 	api.Logger = cfg.APILogger
 
-	joinPermit := cfg.JoinPermit
-	if joinPermit == nil {
-		// By default, we approve all join requests
-		joinPermit = func(*event.Event) bool { return true }
-	}
-
 	acc, _ := lru.New(cfg.AccountDataCache) //nolint:errcheck // addressed in setDefaults()
 
 	lp := &Linkpearl{
@@ -71,7 +69,7 @@ func New(cfg *config.Config) (*Linkpearl, error) {
 		acc:        acc,
 		api:        api,
 		log:        cfg.LPLogger,
-		joinPermit: joinPermit,
+		joinPermit: cfg.JoinPermit,
 		autoleave:  cfg.AutoLeave,
 		maxretries: cfg.MaxRetries,
 	}
