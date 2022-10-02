@@ -2,12 +2,14 @@ module gitlab.com/etke.cc/linkpearl
 
 go 1.18
 
-require maunium.net/go/mautrix v0.12.1
+require (
+	github.com/hashicorp/golang-lru v0.5.4
+	maunium.net/go/mautrix v0.12.1
+)
 
 require (
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/rs/zerolog v1.28.0 // indirect

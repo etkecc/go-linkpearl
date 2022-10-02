@@ -30,4 +30,5 @@ go lp.Start()
 * Zero configuration End-to-End encryption
 * Zero configuration persistent storage
 * Zero configuration session restores
+* Zero configuration room and user account data caching
 * All wrapped components exported
