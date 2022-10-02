@@ -33,9 +33,8 @@ func (l *Linkpearl) GetAccountData(name string, output interface{}) error {
 		}
 	}()
 
-	if l.acc.Contains(name) {
-		cached, _ := l.acc.Get(name)
-
+	cached, ok := l.acc.Get(name)
+	if ok {
 		rv := reflect.ValueOf(output)
 		rv.Elem().Set(reflect.ValueOf(cached).Elem())
 		l.log.Debug("retrieved account data %s from cache", name)
@@ -80,9 +79,8 @@ func (l *Linkpearl) GetRoomAccountData(roomID id.RoomID, name string, output int
 	}()
 
 	key := roomID.String() + name
-	if l.acc.Contains(key) {
-		cached, _ := l.acc.Get(key)
-
+	cached, ok := l.acc.Get(key)
+	if ok {
 		rv := reflect.ValueOf(output)
 		rv.Elem().Set(reflect.ValueOf(cached).Elem())
 		l.log.Debug("retrieved room %s account data %s from cache", roomID, name)
