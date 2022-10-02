@@ -25,6 +25,7 @@ const (
 type Linkpearl struct {
 	db    *sql.DB
 	acc   *lru.Cache
+	acr   *Crypter
 	log   config.Logger
 	api   *mautrix.Client
 	olm   *crypto.OlmMachine
@@ -53,6 +54,14 @@ func setDefaults(cfg *config.Config) {
 	}
 }
 
+func initCrypter(secret string) (*Crypter, error) {
+	if secret == "" {
+		return nil, nil
+	}
+
+	return NewCrypter(secret)
+}
+
 // New linkpearl
 func New(cfg *config.Config) (*Linkpearl, error) {
 	setDefaults(cfg)
@@ -63,10 +72,15 @@ func New(cfg *config.Config) (*Linkpearl, error) {
 	api.Logger = cfg.APILogger
 
 	acc, _ := lru.New(cfg.AccountDataCache) //nolint:errcheck // addressed in setDefaults()
+	acr, err := initCrypter(cfg.AccountDataSecret)
+	if err != nil {
+		return nil, err
+	}
 
 	lp := &Linkpearl{
 		db:         cfg.DB,
 		acc:        acc,
+		acr:        acr,
 		api:        api,
 		log:        cfg.LPLogger,
 		joinPermit: cfg.JoinPermit,
@@ -116,6 +130,11 @@ func (l *Linkpearl) GetStore() *store.Store {
 // GetMachine returns underlying OLM machine
 func (l *Linkpearl) GetMachine() *crypto.OlmMachine {
 	return l.olm
+}
+
+// GetAccountDataCrypter returns crypter used for account data (if any)
+func (l *Linkpearl) GetAccountDataCrypter() *Crypter {
+	return l.acr
 }
 
 // Send a message to the roomID (automatically decide encrypted or not)

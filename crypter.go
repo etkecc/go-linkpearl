@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"io"
 )
@@ -21,8 +22,7 @@ var ErrInvalidData = errors.New("invalid data")
 
 // NewCrypter creates new Crypter
 func NewCrypter(secretkey string) (*Crypter, error) {
-	secret := []byte(secretkey)
-	block, err := aes.NewCipher(secret)
+	block, err := aes.NewCipher([]byte(secretkey))
 	if err != nil {
 		return nil, err
 	}
@@ -40,16 +40,21 @@ func NewCrypter(secretkey string) (*Crypter, error) {
 
 // Decrypt data
 func (c *Crypter) Decrypt(data string) (string, error) {
-	if len(data) < c.nonceSize {
-		return "", ErrInvalidData
+	datab, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		return data, err
 	}
 
-	nonce := data[:c.nonceSize]
-	ciphertext := data[c.nonceSize:]
+	if len(datab) < c.nonceSize {
+		return data, ErrInvalidData
+	}
 
-	plaintext, err := c.cipher.Open(nil, []byte(nonce), []byte(ciphertext), nil)
+	nonce := datab[:c.nonceSize]
+	ciphertext := datab[c.nonceSize:]
+
+	plaintext, err := c.cipher.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return "", err
+		return data, err
 	}
 
 	return string(plaintext), nil
@@ -60,9 +65,9 @@ func (c *Crypter) Encrypt(data string) (string, error) {
 	nonce := make([]byte, c.nonceSize)
 	_, err := io.ReadFull(rand.Reader, nonce)
 	if err != nil {
-		return "", err
+		return data, err
 	}
 
 	encrypted := c.cipher.Seal(nonce, nonce, []byte(data), nil)
-	return string(encrypted), nil
+	return base64.StdEncoding.EncodeToString(encrypted), nil
 }

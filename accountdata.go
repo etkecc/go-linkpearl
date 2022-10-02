@@ -1,99 +1,120 @@
 package linkpearl
 
 import (
-	"reflect"
 	"strings"
 
 	"maunium.net/go/mautrix/id"
 )
 
-func (l *Linkpearl) getAccountData(name string, output interface{}) error {
-	l.log.Debug("retrieving account data %s", name)
-	err := l.GetClient().GetAccountData(name, output)
-	if err != nil && strings.Contains(err.Error(), "M_NOT_FOUND") {
-		return err
-	}
-
-	l.log.Debug("storing account data %s to the cache", name)
-	l.acc.Add(name, output)
-	return nil
-}
-
-// GetAccountData returns the user's account data of this type (from cache and API)
-func (l *Linkpearl) GetAccountData(name string, output interface{}) error {
-	defer func() {
-		rerr := recover()
-		if rerr == nil {
-			return
-		}
-		l.log.Error("failed to set cached account data %s using reflect: %v", name, rerr)
-		err := l.getAccountData(name, output)
-		if err != nil {
-			l.log.Error("failed to retrieve account data %s: %v", name, err)
-		}
-	}()
-
+// GetAccountData of the user (from cache and API, with encryption support)
+func (l *Linkpearl) GetAccountData(name string) (map[string]string, error) {
+	// l.SetAccountData(name, map[string]string{})
 	cached, ok := l.acc.Get(name)
 	if ok {
-		rv := reflect.ValueOf(output)
-		rv.Elem().Set(reflect.ValueOf(cached).Elem())
-		l.log.Debug("retrieved account data %s from cache", name)
-		return nil
+		v, ok := cached.(map[string]string)
+		if ok {
+			l.log.Debug("retrieved account data %s from cache", name)
+			return v, nil
+		}
 	}
 
-	return l.getAccountData(name, output)
-}
+	l.log.Debug("retrieving account data %s", name)
+	var data map[string]string
+	err := l.GetClient().GetAccountData(name, &data)
+	if err != nil && strings.Contains(err.Error(), "M_NOT_FOUND") {
+		return nil, err
+	}
+	data = l.decryptAccountData(data)
 
-// SetAccountData sets the user's account data of this type (to cache and API)
-func (l *Linkpearl) SetAccountData(name string, data interface{}) error {
 	l.log.Debug("storing account data %s to the cache", name)
 	l.acc.Add(name, data)
 
+	return data, nil
+}
+
+// SetAccountData of the user (to cache and API, with encryption support)
+func (l *Linkpearl) SetAccountData(name string, data map[string]string) error {
+	l.log.Debug("storing account data %s to the cache", name)
+	l.acc.Add(name, data)
+
+	data = l.encryptAccountData(data)
 	return l.GetClient().SetAccountData(name, data)
 }
 
-func (l *Linkpearl) getRoomAccountData(roomID id.RoomID, name string, output interface{}) error {
-	l.log.Debug("retrieving room %s account data %s", roomID, name)
-	err := l.GetClient().GetRoomAccountData(roomID, name, output)
-	if err != nil && strings.Contains(err.Error(), "M_NOT_FOUND") {
-		return err
-	}
-
-	l.log.Debug("storing room %s account data %s to the cache", roomID, name)
-	l.acc.Add(roomID.String()+name, output)
-	return nil
-}
-
-// GetRoomAccountData returns the rooms's account data of this type (from cache and API)
-func (l *Linkpearl) GetRoomAccountData(roomID id.RoomID, name string, output interface{}) error {
-	defer func() {
-		rerr := recover()
-		if rerr == nil {
-			return
-		}
-		l.log.Error("failed to set cached room %s account data %s using reflect: %v", roomID, name, rerr)
-		err := l.getAccountData(name, output)
-		if err != nil {
-			l.log.Error("failed to retrieve room %s account data %s: %v", roomID, name, err)
-		}
-	}()
-
+// GetRoomAccountData of the room (from cache and API, with encryption support)
+func (l *Linkpearl) GetRoomAccountData(roomID id.RoomID, name string) (map[string]string, error) {
 	key := roomID.String() + name
 	cached, ok := l.acc.Get(key)
 	if ok {
-		rv := reflect.ValueOf(output)
-		rv.Elem().Set(reflect.ValueOf(cached).Elem())
-		l.log.Debug("retrieved room %s account data %s from cache", roomID, name)
-		return nil
+		v, cok := cached.(map[string]string)
+		if cok {
+			l.log.Debug("retrieved account data %s from cache", name)
+			return v, nil
+		}
 	}
 
-	return l.getRoomAccountData(roomID, name, output)
+	l.log.Debug("retrieving room %s account data %s (%s)", roomID, name, key)
+	var data map[string]string
+	err := l.GetClient().GetRoomAccountData(roomID, name, &data)
+	if err != nil && strings.Contains(err.Error(), "M_NOT_FOUND") {
+		return nil, err
+	}
+	data = l.decryptAccountData(data)
+
+	l.log.Debug("storing room %s account data %s to the cache (%s)", roomID, name, key)
+	l.acc.Add(key, data)
+
+	return data, nil
 }
 
-// SetRoomAccountData sets the rooms's account data of this type (to cache and API)
-func (l *Linkpearl) SetRoomAccountData(roomID id.RoomID, name string, data interface{}) error {
-	l.log.Debug("storing room %s account data %s to the cache", roomID, name)
-	l.acc.Add(roomID.String()+name, data)
+// SetRoomAccountData of the room (to cache and API, with encryption support)
+func (l *Linkpearl) SetRoomAccountData(roomID id.RoomID, name string, data map[string]string) error {
+	key := roomID.String() + name
+	l.log.Debug("storing room %s account data %s to the cache (%s)", roomID, name, key)
+	l.acc.Add(key, data)
 
+	data = l.encryptAccountData(data)
 	return l.GetClient().SetRoomAccountData(roomID, name, data)
+}
+
+func (l *Linkpearl) encryptAccountData(data map[string]string) map[string]string {
+	if l.acr == nil {
+		return data
+	}
+
+	encrypted := make(map[string]string, len(data))
+	for k, v := range data {
+		ek, err := l.acr.Encrypt(k)
+		if err != nil {
+			l.log.Error("cannot encrypt account data (key=%s): %v", k, err)
+		}
+		ev, err := l.acr.Encrypt(v)
+		if err != nil {
+			l.log.Error("cannot encrypt account data (key=%s): %v", k, err)
+		}
+		encrypted[ek] = ev // worst case: plaintext value
+	}
+
+	return encrypted
+}
+
+func (l *Linkpearl) decryptAccountData(data map[string]string) map[string]string {
+	if l.acr == nil {
+		return data
+	}
+
+	decrypted := make(map[string]string, len(data))
+	for ek, ev := range data {
+		k, err := l.acr.Decrypt(ek)
+		if err != nil {
+			l.log.Error("cannot decrypt account data (key=%s): %v", k, err)
+		}
+		v, err := l.acr.Decrypt(ev)
+		if err != nil {
+			l.log.Error("cannot decrypt account data (key=%s): %v", k, err)
+		}
+		decrypted[k] = v // worst case: encrypted value, usual case: migration from plaintext to encrypted account data
+	}
+
+	return decrypted
 }

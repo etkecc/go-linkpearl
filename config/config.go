@@ -29,6 +29,9 @@ type Config struct {
 	// AccountDataCache size
 	AccountDataCache int
 
+	// AccountDataSecret (Password) for encryption
+	AccountDataSecret string
+
 	// MaxRetries for operations like auto join
 	MaxRetries int
 
