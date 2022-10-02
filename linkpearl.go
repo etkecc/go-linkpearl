@@ -4,6 +4,7 @@ package linkpearl
 import (
 	"database/sql"
 
+	lru "github.com/hashicorp/golang-lru"
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/crypto"
 	"maunium.net/go/mautrix/event"
@@ -13,12 +14,17 @@ import (
 	"gitlab.com/etke.cc/linkpearl/store"
 )
 
-// DefaultMaxRetries for operations like autojoin
-const DefaultMaxRetries = 10
+const (
+	// DefaultMaxRetries for operations like autojoin
+	DefaultMaxRetries = 10
+	// DefaultAccountDataCache size
+	DefaultAccountDataCache = 1000
+)
 
 // Linkpearl object
 type Linkpearl struct {
 	db    *sql.DB
+	acc   *lru.Cache
 	log   config.Logger
 	api   *mautrix.Client
 	olm   *crypto.OlmMachine
@@ -34,11 +40,18 @@ type ReqPresence struct {
 	StatusMsg string         `json:"status_msg,omitempty"`
 }
 
-// New linkpearl
-func New(cfg *config.Config) (*Linkpearl, error) {
+func setDefaults(cfg *config.Config) {
 	if cfg.MaxRetries == 0 {
 		cfg.MaxRetries = DefaultMaxRetries
 	}
+	if cfg.AccountDataCache == 0 {
+		cfg.AccountDataCache = DefaultAccountDataCache
+	}
+}
+
+// New linkpearl
+func New(cfg *config.Config) (*Linkpearl, error) {
+	setDefaults(cfg)
 	api, err := mautrix.NewClient(cfg.Homeserver, "", "")
 	if err != nil {
 		return nil, err
@@ -51,8 +64,11 @@ func New(cfg *config.Config) (*Linkpearl, error) {
 		joinPermit = func(*event.Event) bool { return true }
 	}
 
+	acc, _ := lru.New(cfg.AccountDataCache) //nolint:errcheck // addressed in setDefaults()
+
 	lp := &Linkpearl{
 		db:         cfg.DB,
+		acc:        acc,
 		api:        api,
 		log:        cfg.LPLogger,
 		joinPermit: joinPermit,
