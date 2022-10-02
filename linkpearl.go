@@ -139,6 +139,26 @@ func (l *Linkpearl) Send(roomID id.RoomID, content interface{}) (id.EventID, err
 	return resp.EventID, err
 }
 
+// SendFile to a matrix room
+func (l *Linkpearl) SendFile(roomID id.RoomID, req *mautrix.ReqUploadMedia, msgtype event.MessageType, relation *event.RelatesTo) error {
+	resp, err := l.GetClient().UploadMedia(*req)
+	if err != nil {
+		l.log.Error("cannot upload file %s: %v", req.FileName, err)
+		return err
+	}
+	_, err = l.Send(roomID, &event.MessageEventContent{
+		MsgType:   msgtype,
+		Body:      req.FileName,
+		URL:       resp.ContentURI.CUString(),
+		RelatesTo: relation,
+	})
+	if err != nil {
+		l.log.Error("cannot send uploaded file: %s: %v", req.FileName, err)
+	}
+
+	return err
+}
+
 // SetPresence (own). See https://spec.matrix.org/v1.3/client-server-api/#put_matrixclientv3presenceuseridstatus
 func (l *Linkpearl) SetPresence(presence event.Presence, message string) error {
 	req := ReqPresence{Presence: presence, StatusMsg: message}
