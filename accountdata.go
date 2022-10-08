@@ -22,14 +22,16 @@ func (l *Linkpearl) GetAccountData(name string) (map[string]string, error) {
 	var data map[string]string
 	err := l.GetClient().GetAccountData(name, &data)
 	if err != nil && strings.Contains(err.Error(), "M_NOT_FOUND") {
-		return nil, err
+		data = map[string]string{}
+		l.acc.Add(name, data)
+		return data, err
 	}
 	data = l.decryptAccountData(data)
 
 	l.log.Debug("storing account data %s to the cache", name)
 	l.acc.Add(name, data)
 
-	return data, nil
+	return data, err
 }
 
 // SetAccountData of the user (to cache and API, with encryption support)
@@ -57,14 +59,16 @@ func (l *Linkpearl) GetRoomAccountData(roomID id.RoomID, name string) (map[strin
 	var data map[string]string
 	err := l.GetClient().GetRoomAccountData(roomID, name, &data)
 	if err != nil && strings.Contains(err.Error(), "M_NOT_FOUND") {
-		return nil, err
+		data = map[string]string{}
+		l.acc.Add(name, data)
+		return data, nil
 	}
 	data = l.decryptAccountData(data)
 
 	l.log.Debug("storing room %s account data %s to the cache (%s)", roomID, name, key)
 	l.acc.Add(key, data)
 
-	return data, nil
+	return data, err
 }
 
 // SetRoomAccountData of the room (to cache and API, with encryption support)
