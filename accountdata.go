@@ -21,9 +21,11 @@ func (l *Linkpearl) GetAccountData(name string) (map[string]string, error) {
 	l.log.Debug("retrieving account data %s", name)
 	var data map[string]string
 	err := l.GetClient().GetAccountData(name, &data)
-	if err != nil && strings.Contains(err.Error(), "M_NOT_FOUND") {
+	if err != nil {
 		data = map[string]string{}
-		l.acc.Add(name, data)
+		if strings.Contains(err.Error(), "M_NOT_FOUND") {
+			l.acc.Add(name, data)
+		}
 		return data, err
 	}
 	data = l.decryptAccountData(data)
@@ -58,10 +60,12 @@ func (l *Linkpearl) GetRoomAccountData(roomID id.RoomID, name string) (map[strin
 	l.log.Debug("retrieving room %s account data %s (%s)", roomID, name, key)
 	var data map[string]string
 	err := l.GetClient().GetRoomAccountData(roomID, name, &data)
-	if err != nil && strings.Contains(err.Error(), "M_NOT_FOUND") {
+	if err != nil {
 		data = map[string]string{}
-		l.acc.Add(name, data)
-		return data, nil
+		if strings.Contains(err.Error(), "M_NOT_FOUND") {
+			l.acc.Add(name, data)
+		}
+		return data, err
 	}
 	data = l.decryptAccountData(data)
 
