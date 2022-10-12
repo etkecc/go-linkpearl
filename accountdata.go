@@ -24,7 +24,9 @@ func (l *Linkpearl) GetAccountData(name string) (map[string]string, error) {
 	if err != nil {
 		data = map[string]string{}
 		if strings.Contains(err.Error(), "M_NOT_FOUND") {
+			l.log.Debug("storing empty account data %s to the cache", name)
 			l.acc.Add(name, data)
+			return data, nil
 		}
 		return data, err
 	}
@@ -63,7 +65,9 @@ func (l *Linkpearl) GetRoomAccountData(roomID id.RoomID, name string) (map[strin
 	if err != nil {
 		data = map[string]string{}
 		if strings.Contains(err.Error(), "M_NOT_FOUND") {
+			l.log.Debug("storing empty room account data %s to the cache", name)
 			l.acc.Add(name, data)
+			return data, nil
 		}
 		return data, err
 	}
