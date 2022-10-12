@@ -65,8 +65,8 @@ func (l *Linkpearl) GetRoomAccountData(roomID id.RoomID, name string) (map[strin
 	if err != nil {
 		data = map[string]string{}
 		if strings.Contains(err.Error(), "M_NOT_FOUND") {
-			l.log.Debug("storing empty room account data %s to the cache", name)
-			l.acc.Add(name, data)
+			l.log.Debug("storing empty room %s account data %s to the cache (%s)", roomID, name, key)
+			l.acc.Add(key, data)
 			return data, nil
 		}
 		return data, err
