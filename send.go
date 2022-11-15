@@ -10,21 +10,15 @@ import (
 // Send a message to the roomID and automatically try to encrypt it, if the destination room is encrypted
 func (l *Linkpearl) Send(roomID id.RoomID, content interface{}) (id.EventID, error) {
 	if !l.store.IsEncrypted(roomID) {
+		l.log.Debug("room %s is not encrypted", roomID)
 		return l.SendPlaintext(roomID, content)
 	}
+	l.log.Debug("room %s is encrypted", roomID)
 
 	encrypted, err := l.EncryptEvent(roomID, content)
 	if err != nil {
-		l.log.Error("cannot send encrypted message into %s: %v, sending plaintext...", roomID, err)
+		l.log.Error("cannot encrypt message: %v, sending plaintext...", roomID, err)
 		return l.SendPlaintext(roomID, content)
-	}
-
-	// try to add missing relations
-	if encrypted.RelatesTo == nil {
-		originalContent, ok := content.(*event.Content)
-		if ok {
-			encrypted.RelatesTo = originalContent.AsMessage().RelatesTo
-		}
 	}
 
 	return l.SendEncrypted(roomID, encrypted)
@@ -37,11 +31,13 @@ func (l *Linkpearl) SendFile(roomID id.RoomID, req *mautrix.ReqUploadMedia, msgt
 		l.log.Error("cannot upload file %s: %v", req.FileName, err)
 		return err
 	}
-	_, err = l.Send(roomID, &event.MessageEventContent{
-		MsgType:   msgtype,
-		Body:      req.FileName,
-		URL:       resp.ContentURI.CUString(),
-		RelatesTo: relation,
+	_, err = l.Send(roomID, &event.Content{
+		Parsed: &event.MessageEventContent{
+			MsgType:   msgtype,
+			Body:      req.FileName,
+			URL:       resp.ContentURI.CUString(),
+			RelatesTo: relation,
+		},
 	})
 	if err != nil {
 		l.log.Error("cannot send uploaded file: %s: %v", req.FileName, err)
@@ -52,6 +48,7 @@ func (l *Linkpearl) SendFile(roomID id.RoomID, req *mautrix.ReqUploadMedia, msgt
 
 // SendPlaintext sends plaintext event only
 func (l *Linkpearl) SendPlaintext(roomID id.RoomID, content interface{}) (id.EventID, error) {
+	l.log.Debug("sending plaintext event to %s: %+v", roomID, content)
 	resp, err := l.api.SendMessageEvent(roomID, event.EventMessage, content)
 	if err != nil {
 		return "", err
@@ -60,7 +57,8 @@ func (l *Linkpearl) SendPlaintext(roomID id.RoomID, content interface{}) (id.Eve
 }
 
 // SendEncrypted sends encrypted event only
-func (l *Linkpearl) SendEncrypted(roomID id.RoomID, content *event.EncryptedEventContent) (id.EventID, error) {
+func (l *Linkpearl) SendEncrypted(roomID id.RoomID, content interface{}) (id.EventID, error) {
+	l.log.Debug("sending encrypted event to %s: %+v", roomID, content)
 	resp, err := l.api.SendMessageEvent(roomID, event.EventEncrypted, content)
 	if err != nil {
 		return "", err
@@ -70,6 +68,7 @@ func (l *Linkpearl) SendEncrypted(roomID id.RoomID, content *event.EncryptedEven
 
 // EncryptEvent before sending
 func (l *Linkpearl) EncryptEvent(roomID id.RoomID, content interface{}) (*event.EncryptedEventContent, error) {
+	l.log.Debug("encrypting event %+v", content)
 	encrypted, err := l.olm.EncryptMegolmEvent(roomID, event.EventMessage, content)
 	if crypto.IsShareError(err) {
 		err = l.olm.ShareGroupSession(roomID, l.store.GetRoomMembers(roomID))
