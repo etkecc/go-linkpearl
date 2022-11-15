@@ -10,11 +10,11 @@ import (
 func (l *Linkpearl) GetAccountData(name string) (map[string]string, error) {
 	cached, ok := l.acc.Get(name)
 	if ok {
-		v, ok := cached.(map[string]string)
-		if ok {
-			l.log.Debug("GetAccountData(%s) from cache (data): %+v", name, v)
-			return v, nil
+		l.log.Debug("GetAccountData(%s) from cache (data): %+v", name, cached)
+		if cached == nil {
+			return map[string]string{}, nil
 		}
+		return cached, nil
 	}
 
 	l.log.Debug("GetAccountData(%s) from API", name)
@@ -50,11 +50,11 @@ func (l *Linkpearl) GetRoomAccountData(roomID id.RoomID, name string) (map[strin
 	key := roomID.String() + name
 	cached, ok := l.acc.Get(key)
 	if ok {
-		v, cok := cached.(map[string]string)
-		if cok {
-			l.log.Debug("GetRoomAccountData(%s, %s) from cache (data): %+v", roomID, name, v)
-			return v, nil
+		l.log.Debug("GetRoomAccountData(%s, %s) from cache (data): %+v", roomID, name, cached)
+		if cached == nil {
+			return map[string]string{}, nil
 		}
+		return cached, nil
 	}
 
 	l.log.Debug("GetRoomAccountData(%s, %s) from API", roomID, name)

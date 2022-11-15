@@ -4,7 +4,7 @@ package linkpearl
 import (
 	"database/sql"
 
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/crypto"
 	"maunium.net/go/mautrix/event"
@@ -24,7 +24,7 @@ const (
 // Linkpearl object
 type Linkpearl struct {
 	db    *sql.DB
-	acc   *lru.Cache
+	acc   *lru.Cache[string, map[string]string]
 	acr   *Crypter
 	log   config.Logger
 	api   *mautrix.Client
@@ -71,7 +71,7 @@ func New(cfg *config.Config) (*Linkpearl, error) {
 	}
 	api.Logger = cfg.APILogger
 
-	acc, _ := lru.New(cfg.AccountDataCache) //nolint:errcheck // addressed in setDefaults()
+	acc, _ := lru.New[string, map[string]string](cfg.AccountDataCache) //nolint:errcheck // addressed in setDefaults()
 	acr, err := initCrypter(cfg.AccountDataSecret)
 	if err != nil {
 		return nil, err
