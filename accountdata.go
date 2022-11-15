@@ -8,41 +8,39 @@ import (
 
 // GetAccountData of the user (from cache and API, with encryption support)
 func (l *Linkpearl) GetAccountData(name string) (map[string]string, error) {
-	// l.SetAccountData(name, map[string]string{})
 	cached, ok := l.acc.Get(name)
 	if ok {
 		v, ok := cached.(map[string]string)
 		if ok {
-			l.log.Debug("retrieved account data %s from cache", name)
+			l.log.Debug("GetAccountData(%s) from cache (data): %+v", name, v)
 			return v, nil
 		}
 	}
 
-	l.log.Debug("retrieving account data %s", name)
+	l.log.Debug("GetAccountData(%s) from API", name)
 	var data map[string]string
 	err := l.GetClient().GetAccountData(name, &data)
 	if err != nil {
+		l.log.Debug("GetAccountData(%s) from API (error): %v", name, err)
 		data = map[string]string{}
 		if strings.Contains(err.Error(), "M_NOT_FOUND") {
-			l.log.Debug("storing empty account data %s to the cache", name)
 			l.acc.Add(name, data)
 			return data, nil
 		}
 		return data, err
 	}
 	data = l.decryptAccountData(data)
+	l.log.Debug("GetAccountData(%s) from API (data): %+v", name, data)
 
-	l.log.Debug("storing account data %s to the cache", name)
 	l.acc.Add(name, data)
-
 	return data, err
 }
 
 // SetAccountData of the user (to cache and API, with encryption support)
 func (l *Linkpearl) SetAccountData(name string, data map[string]string) error {
-	l.log.Debug("storing account data %s to the cache", name)
 	l.acc.Add(name, data)
 
+	l.log.Debug("SetAccountData(%s) to API (data): %+v", name, data)
 	data = l.encryptAccountData(data)
 	return l.GetClient().SetAccountData(name, data)
 }
@@ -54,37 +52,36 @@ func (l *Linkpearl) GetRoomAccountData(roomID id.RoomID, name string) (map[strin
 	if ok {
 		v, cok := cached.(map[string]string)
 		if cok {
-			l.log.Debug("retrieved account data %s from cache", name)
+			l.log.Debug("GetRoomAccountData(%s, %s) from cache (data): %+v", roomID, name, v)
 			return v, nil
 		}
 	}
 
-	l.log.Debug("retrieving room %s account data %s (%s)", roomID, name, key)
+	l.log.Debug("GetRoomAccountData(%s, %s) from API", roomID, name)
 	var data map[string]string
 	err := l.GetClient().GetRoomAccountData(roomID, name, &data)
 	if err != nil {
+		l.log.Debug("GetRoomAccountData(%s, %s) from API (error): %v", roomID, name, err)
 		data = map[string]string{}
 		if strings.Contains(err.Error(), "M_NOT_FOUND") {
-			l.log.Debug("storing empty room %s account data %s to the cache (%s)", roomID, name, key)
 			l.acc.Add(key, data)
 			return data, nil
 		}
 		return data, err
 	}
 	data = l.decryptAccountData(data)
+	l.log.Debug("GetRoomAccountData(%s,%s) from API (data): %+v", roomID, name, data)
 
-	l.log.Debug("storing room %s account data %s to the cache (%s)", roomID, name, key)
 	l.acc.Add(key, data)
-
 	return data, err
 }
 
 // SetRoomAccountData of the room (to cache and API, with encryption support)
 func (l *Linkpearl) SetRoomAccountData(roomID id.RoomID, name string, data map[string]string) error {
 	key := roomID.String() + name
-	l.log.Debug("storing room %s account data %s to the cache (%s)", roomID, name, key)
 	l.acc.Add(key, data)
 
+	l.log.Debug("SetRoomAccountData(%s, %s) to API (data): %+v", roomID, name, data)
 	data = l.encryptAccountData(data)
 	return l.GetClient().SetRoomAccountData(roomID, name, data)
 }
