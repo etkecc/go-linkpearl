@@ -8,7 +8,6 @@ import (
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/crypto"
 	"maunium.net/go/mautrix/event"
-	"maunium.net/go/mautrix/id"
 
 	"gitlab.com/etke.cc/linkpearl/config"
 	"gitlab.com/etke.cc/linkpearl/store"
@@ -135,61 +134,6 @@ func (l *Linkpearl) GetMachine() *crypto.OlmMachine {
 // GetAccountDataCrypter returns crypter used for account data (if any)
 func (l *Linkpearl) GetAccountDataCrypter() *Crypter {
 	return l.acr
-}
-
-// Send a message to the roomID (automatically decide encrypted or not)
-func (l *Linkpearl) Send(roomID id.RoomID, content interface{}) (id.EventID, error) {
-	if !l.store.IsEncrypted(roomID) {
-		resp, err := l.api.SendMessageEvent(roomID, event.EventMessage, content)
-		if err != nil {
-			return "", err
-		}
-		return resp.EventID, nil
-	}
-
-	encrypted, err := l.olm.EncryptMegolmEvent(roomID, event.EventMessage, content)
-	if crypto.IsShareError(err) {
-		err = l.olm.ShareGroupSession(roomID, l.store.GetRoomMembers(roomID))
-		if err != nil {
-			return "", err
-		}
-		encrypted, err = l.olm.EncryptMegolmEvent(roomID, event.EventMessage, content)
-	}
-
-	if err != nil {
-		l.log.Error("cannot send encrypted message into %s: %v, sending plaintext...", roomID, err)
-		resp, plaintextErr := l.api.SendMessageEvent(roomID, event.EventMessage, content)
-		if plaintextErr != nil {
-			return "", plaintextErr
-		}
-		return resp.EventID, nil
-	}
-
-	resp, err := l.api.SendMessageEvent(roomID, event.EventEncrypted, encrypted)
-	if err != nil {
-		return "", err
-	}
-	return resp.EventID, err
-}
-
-// SendFile to a matrix room
-func (l *Linkpearl) SendFile(roomID id.RoomID, req *mautrix.ReqUploadMedia, msgtype event.MessageType, relation *event.RelatesTo) error {
-	resp, err := l.GetClient().UploadMedia(*req)
-	if err != nil {
-		l.log.Error("cannot upload file %s: %v", req.FileName, err)
-		return err
-	}
-	_, err = l.Send(roomID, &event.MessageEventContent{
-		MsgType:   msgtype,
-		Body:      req.FileName,
-		URL:       resp.ContentURI.CUString(),
-		RelatesTo: relation,
-	})
-	if err != nil {
-		l.log.Error("cannot send uploaded file: %s: %v", req.FileName, err)
-	}
-
-	return err
 }
 
 // SetPresence (own). See https://spec.matrix.org/v1.3/client-server-api/#put_matrixclientv3presenceuseridstatus
