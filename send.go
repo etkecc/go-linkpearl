@@ -1,6 +1,8 @@
 package linkpearl
 
 import (
+	"fmt"
+
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/crypto"
 	"maunium.net/go/mautrix/event"
@@ -22,6 +24,25 @@ func (l *Linkpearl) Send(roomID id.RoomID, content interface{}) (id.EventID, err
 	}
 
 	return l.SendEncrypted(roomID, encrypted)
+}
+
+// SendNotice to a room with optional thread relation
+func (l *Linkpearl) SendNotice(roomID id.RoomID, threadID id.EventID, message string, args ...interface{}) {
+	content := &event.MessageEventContent{
+		MsgType: event.MsgNotice,
+		Body:    fmt.Sprintf(message, args...),
+	}
+	if threadID != "" {
+		content.RelatesTo = &event.RelatesTo{
+			Type:    event.RelThread,
+			EventID: threadID,
+		}
+	}
+
+	_, err := l.api.SendMessageEvent(roomID, event.EventMessage, content)
+	if err != nil {
+		l.log.Error("cannot send a notice into room %q: %v", roomID, err)
+	}
 }
 
 // SendFile to a matrix room
