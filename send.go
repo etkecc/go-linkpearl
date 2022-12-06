@@ -6,6 +6,7 @@ import (
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/crypto"
 	"maunium.net/go/mautrix/event"
+	"maunium.net/go/mautrix/format"
 	"maunium.net/go/mautrix/id"
 )
 
@@ -28,10 +29,7 @@ func (l *Linkpearl) Send(roomID id.RoomID, content interface{}) (id.EventID, err
 
 // SendNotice to a room with optional thread relation
 func (l *Linkpearl) SendNotice(roomID id.RoomID, threadID id.EventID, message string, args ...interface{}) {
-	content := &event.MessageEventContent{
-		MsgType: event.MsgNotice,
-		Body:    fmt.Sprintf(message, args...),
-	}
+	content := format.RenderMarkdown(fmt.Sprintf(message, args...), true, true)
 	if threadID != "" {
 		content.RelatesTo = &event.RelatesTo{
 			Type:    event.RelThread,
@@ -39,7 +37,7 @@ func (l *Linkpearl) SendNotice(roomID id.RoomID, threadID id.EventID, message st
 		}
 	}
 
-	_, err := l.api.SendMessageEvent(roomID, event.EventMessage, content)
+	_, err := l.Send(roomID, &content)
 	if err != nil {
 		l.log.Error("cannot send a notice into room %q: %v", roomID, err)
 	}
