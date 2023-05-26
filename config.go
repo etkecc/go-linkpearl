@@ -1,11 +1,10 @@
-// Package config was added to store cross-package structs and interfaces.
-package config
+package linkpearl
 
 import (
 	"database/sql"
 
+	"github.com/rs/zerolog"
 	"maunium.net/go/mautrix"
-	"maunium.net/go/mautrix/crypto"
 	"maunium.net/go/mautrix/event"
 )
 
@@ -32,25 +31,11 @@ type Config struct {
 	// AccountDataSecret (Password) for encryption
 	AccountDataSecret string
 
-	// AccountDataLogReplace contains map of field name => value
-	// that will be used to replace mentioned account data fields with provided values
-	// when printing in logs (DEBUG, TRACE)
-	AccountDataLogReplace map[string]string
-
 	// MaxRetries for operations like auto join
 	MaxRetries int
 
-	// NoEncryption disabled encryption support
-	NoEncryption bool
-
-	// LPLogger used for linkpearl's glue code
-	LPLogger Logger
-	// APILogger used for matrix CS API calls
-	APILogger Logger
-	// StoreLogger used for persistent store
-	StoreLogger Logger
-	// CryptoLogger used for OLM machine
-	CryptoLogger Logger
+	// Logger
+	Logger zerolog.Logger
 
 	// DB object
 	DB *sql.DB
@@ -58,10 +43,16 @@ type Config struct {
 	Dialect string
 }
 
-// Logger implementation of crypto.Logger and mautrix.Logger
-type Logger interface {
-	crypto.Logger
-	mautrix.WarnLogger
-
-	Info(message string, args ...interface{})
+// LoginAs for cryptohelper
+func (cfg *Config) LoginAs() *mautrix.ReqLogin {
+	return &mautrix.ReqLogin{
+		Type: mautrix.AuthTypePassword,
+		Identifier: mautrix.UserIdentifier{
+			Type: mautrix.IdentifierTypeUser,
+			User: cfg.Login,
+		},
+		Password:           cfg.Password,
+		StoreCredentials:   true,
+		StoreHomeserverURL: true,
+	}
 }
