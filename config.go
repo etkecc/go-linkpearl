@@ -50,7 +50,7 @@ type Config struct {
 
 // LoginAs for cryptohelper
 func (cfg *Config) LoginAs() *mautrix.ReqLogin {
-	var loginReq = mautrix.ReqLogin{
+	loginReq := mautrix.ReqLogin{
 		Identifier: mautrix.UserIdentifier{
 			Type: mautrix.IdentifierTypeUser,
 			User: cfg.Login,
