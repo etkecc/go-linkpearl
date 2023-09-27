@@ -22,6 +22,7 @@ func (l *Linkpearl) Send(roomID id.RoomID, content interface{}) (id.EventID, err
 // SendNotice to a room with optional relations, markdown supported
 func (l *Linkpearl) SendNotice(roomID id.RoomID, message string, relates ...*event.RelatesTo) {
 	content := format.RenderMarkdown(message, true, true)
+	content.MsgType = event.MsgNotice
 	if len(relates) > 0 {
 		content.RelatesTo = relates[0]
 	}
