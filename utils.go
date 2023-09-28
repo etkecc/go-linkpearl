@@ -65,10 +65,26 @@ func EventParent(currentID id.EventID, content *event.MessageEventContent) id.Ev
 	return currentID
 }
 
+// EventContains checks if raw event content contains specified field with specified values
+func EventContains[T comparable](evt *event.Event, field string, value T) bool {
+	if evt.Content.Raw == nil {
+		return false
+	}
+	if EventField[T](&evt.Content, field) != value {
+		return false
+	}
+
+	return true
+}
+
 // EventField returns field value from raw event content
-func EventField[T any](content *event.Content, field string) T {
+func EventField[T comparable](content *event.Content, field string) T {
 	var zero T
-	raw := content.Raw[field]
+	raw, ok := content.Raw[field]
+	if !ok {
+		return zero
+	}
+
 	if raw == nil {
 		return zero
 	}
