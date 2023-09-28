@@ -97,11 +97,12 @@ func EventField[T comparable](content *event.Content, field string) T {
 	return v
 }
 
-func ParseContent(evt *event.Event, eventType event.Type, log *zerolog.Logger) {
+// ParseContent parses event content according to evt.Type
+func ParseContent(evt *event.Event, log *zerolog.Logger) {
 	if evt.Content.Parsed != nil {
 		return
 	}
-	perr := evt.Content.ParseRaw(eventType)
+	perr := evt.Content.ParseRaw(evt.Type)
 	if perr != nil {
 		log.Error().Err(perr).Msg("cannot parse event content")
 	}
