@@ -7,6 +7,11 @@ import (
 	"maunium.net/go/mautrix/id"
 )
 
+// EventRelatesTo uses evt as source for EventParent() and RelatesTo()
+func EventRelatesTo(evt *event.Event) *event.RelatesTo {
+	return RelatesTo(EventParent(evt.ID, evt.Content.AsMessage()))
+}
+
 // RelatesTo returns relation object of a matrix event (either threads with reply-to fallback or plain reply-to)
 func RelatesTo(parentID id.EventID, noThreads ...bool) *event.RelatesTo {
 	if parentID == "" {
