@@ -9,7 +9,13 @@ import (
 
 // EventRelatesTo uses evt as source for EventParent() and RelatesTo()
 func EventRelatesTo(evt *event.Event) *event.RelatesTo {
-	return RelatesTo(EventParent(evt.ID, evt.Content.AsMessage()))
+	ParseContent(evt, nil)
+	relatable, ok := evt.Content.Parsed.(event.Relatable)
+	if !ok {
+		return nil
+	}
+
+	return RelatesTo(EventParent(evt.ID, relatable))
 }
 
 // RelatesTo returns relation object of a matrix event (either threads with reply-to fallback or plain reply-to)
@@ -41,25 +47,33 @@ func RelatesTo(parentID id.EventID, noThreads ...bool) *event.RelatesTo {
 	}
 }
 
-// EventParent returns parent event ID (either from thread or from reply-to relation)
-func EventParent(currentID id.EventID, content *event.MessageEventContent) id.EventID {
-	if content == nil {
-		return currentID
+// GetParent is nil-safe version of evt.Content.AsMessage().RelatesTo.(GetThreadParent()|GetReplyTo())
+func GetParent(evt *event.Event) id.EventID {
+	ParseContent(evt, nil)
+	content, ok := evt.Content.Parsed.(event.Relatable)
+	if !ok {
+		return ""
 	}
 
-	relation := content.OptionalGetRelatesTo()
+	relation := content.GetRelatesTo()
 	if relation == nil {
-		return currentID
+		return ""
 	}
 
-	threadParent := relation.GetThreadParent()
-	if threadParent != "" {
-		return threadParent
+	if parentID := relation.GetThreadParent(); parentID != "" {
+		return parentID
+	}
+	if parentID := relation.GetReplyTo(); parentID != "" {
+		return parentID
 	}
 
-	replyParent := relation.GetReplyTo()
-	if replyParent != "" {
-		return replyParent
+	return ""
+}
+
+// EventParent returns parent event ID (either from thread or from reply-to relation), like GetRelatesTo(), but with content and default return value
+func EventParent(currentID id.EventID, content event.Relatable) id.EventID {
+	if parentID := GetParent(&event.Event{Content: event.Content{Parsed: content}}); parentID != "" {
+		return parentID
 	}
 
 	return currentID
@@ -103,7 +117,7 @@ func ParseContent(evt *event.Event, log *zerolog.Logger) {
 		return
 	}
 	perr := evt.Content.ParseRaw(evt.Type)
-	if perr != nil {
+	if perr != nil && log != nil {
 		log.Error().Err(perr).Msg("cannot parse event content")
 	}
 }
