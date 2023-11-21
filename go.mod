@@ -3,7 +3,7 @@ module gitlab.com/etke.cc/linkpearl
 go 1.18
 
 require (
-	github.com/hashicorp/golang-lru/v2 v2.0.1
+	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/rs/zerolog v1.31.0
 	go.mau.fi/util v0.2.1
 	maunium.net/go/mautrix v0.16.2
@@ -11,7 +11,7 @@ require (
 
 require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/tidwall/gjson v1.17.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
