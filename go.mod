@@ -5,8 +5,8 @@ go 1.18
 require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/rs/zerolog v1.31.0
-	go.mau.fi/util v0.2.1
-	maunium.net/go/mautrix v0.16.2
+	go.mau.fi/util v0.3.0
+	maunium.net/go/mautrix v0.17.0
 )
 
 require (
@@ -17,9 +17,9 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/yuin/goldmark v1.6.0 // indirect
-	golang.org/x/crypto v0.15.0 // indirect
-	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
-	golang.org/x/net v0.18.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3 // indirect
+	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	maunium.net/go/maulogger/v2 v2.4.1 // indirect
 )
