@@ -104,7 +104,7 @@ func New(cfg *Config) (*Linkpearl, error) {
 		return nil, err
 	}
 	lp.ch.LoginAs = cfg.LoginAs()
-	if err = lp.ch.Init(context.Background()); err != nil {
+	if err := lp.ch.Init(context.Background()); err != nil {
 		return nil, err
 	}
 	lp.api.Crypto = lp.ch
@@ -140,7 +140,7 @@ func (l *Linkpearl) SetPresence(ctx context.Context, presence event.Presence, me
 	return err
 }
 
-// SetJoinPermit sets the the join permit callback function
+// SetJoinPermit sets the join permit callback function
 func (l *Linkpearl) SetJoinPermit(value func(context.Context, *event.Event) bool) {
 	l.joinPermit = value
 }

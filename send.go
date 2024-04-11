@@ -12,7 +12,7 @@ import (
 // Send a message to the roomID and automatically try to encrypt it, if the destination room is encrypted
 //
 //nolint:unparam // it's public interface
-func (l *Linkpearl) Send(ctx context.Context, roomID id.RoomID, content interface{}) (id.EventID, error) {
+func (l *Linkpearl) Send(ctx context.Context, roomID id.RoomID, content any) (id.EventID, error) {
 	l.log.Debug().Str("roomID", roomID.String()).Any("content", content).Msg("sending event")
 	resp, err := l.api.SendMessageEvent(ctx, roomID, event.EventMessage, content)
 	if err != nil {
