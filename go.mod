@@ -6,9 +6,9 @@ toolchain go1.22.1
 
 require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
-	github.com/rs/zerolog v1.32.0
-	go.mau.fi/util v0.4.2
-	maunium.net/go/mautrix v0.18.1
+	github.com/rs/zerolog v1.33.0
+	go.mau.fi/util v0.6.0
+	maunium.net/go/mautrix v0.19.0
 )
 
 require (
@@ -18,9 +18,9 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
-	github.com/yuin/goldmark v1.7.1 // indirect
-	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
-	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
+	github.com/yuin/goldmark v1.7.4 // indirect
+	golang.org/x/crypto v0.25.0 // indirect
+	golang.org/x/exp v0.0.0-20240707233637-46b078467d37 // indirect
+	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
 )
