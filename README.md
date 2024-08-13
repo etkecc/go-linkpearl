@@ -1,4 +1,4 @@
-# linkpearl [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/etkecc) [![Go Report Card](https://goreportcard.com/badge/gitlab.com/etke.cc/linkpearl)](https://goreportcard.com/report/gitlab.com/etke.cc/linkpearl) [![Go Reference](https://pkg.go.dev/badge/gitlab.com/etke.cc/linkpearl.svg)](https://pkg.go.dev/gitlab.com/etke.cc/linkpearl)
+# linkpearl
 
 > [more about that name](https://ffxiv.gamerescape.com/wiki/Linkpearl)
 
@@ -7,7 +7,7 @@ A wrapper around [mautrix-go](https://github.com/mautrix/go) with infrastructure
 ## How to get
 
 ```
-go get gitlab.com/etke.cc/linkpearl
+go get github.com/etkecc/go-linkpearl
 ```
 
 ```
