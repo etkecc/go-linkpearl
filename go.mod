@@ -7,11 +7,12 @@ toolchain go1.23.1
 require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/rs/zerolog v1.33.0
-	go.mau.fi/util v0.7.0
-	maunium.net/go/mautrix v0.20.0
+	go.mau.fi/util v0.8.0
+	maunium.net/go/mautrix v0.21.0
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
