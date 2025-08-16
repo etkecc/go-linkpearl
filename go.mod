@@ -7,8 +7,8 @@ toolchain go1.24.5
 require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/rs/zerolog v1.34.0
-	go.mau.fi/util v0.8.8
-	maunium.net/go/mautrix v0.24.2
+	go.mau.fi/util v0.9.0
+	maunium.net/go/mautrix v0.25.0
 )
 
 require (
